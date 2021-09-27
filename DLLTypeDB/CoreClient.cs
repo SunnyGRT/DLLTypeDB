@@ -263,6 +263,32 @@ namespace TypeDBCustom
         }
 
         /// <summary>
+        /// This method used to commit changes made to data or schema
+        /// This method must be called after every write request to server
+        /// otherwise, changes to data maybe lost
+        /// </summary>
+        /// <param name="ReqID">This unique ID will be used through out the stream</param>
+        /// <param name="Transactions">The stream object that will be used to write transaction</param>
+        private void CommitChanges(
+            ref Google.Protobuf.ByteString ReqID, 
+            ref AsyncDuplexStreamingCall<Transaction.Types.Client, Transaction.Types.Server> Transactions)
+        {
+
+            // clear the existing transactions if there are any.
+            transactionClient.Reqs.Clear();
+
+            // fill the sessionId in transaction open request. it will open the stream for communication.
+            trans_commit.ReqId = ReqID;
+            // add the transaction open request to transaction client.
+            transactionClient.Reqs.Add(trans_commit);
+            // use the transaction client to write the transaction on stream
+            Transactions.RequestStream.WriteAsync(transactionClient).GetAwaiter().GetResult();
+            // move the read to next element so server response will be clear from open transaction resp
+            Transactions.ResponseStream.MoveNext(CancellationToken.None).GetAwaiter().GetResult();
+
+        }
+
+        /// <summary>
         /// this is check if the stream have done sending the data and we exit the loop,
         /// otherwise we need to send the continue stream request to get the rest of data
         /// if this miss you will stuck on MoveNext 
@@ -447,10 +473,26 @@ namespace TypeDBCustom
 
             }
 
+            // check if the changes need to commit
+            switch (queryType)
+            {
+                case QueryType.Update:
+                case QueryType.Delete:
+                case QueryType.Insert:
+                case QueryType.Define:
+                case QueryType.Undefine:
+                    // commit the changes to server
+                    CommitChanges(ref ReqID, ref Transactions);
+                    break;
+
+                case QueryType.Match:
+                default:
+                    break;
+            }
             // closes the stream
             CloseTransaction(ref Transactions);
 
-            // check if session created, then close it
+            // check if new session created, then close it
             if (session != null)
                 Client.session_close(new Session.Types.Close.Types.Req() { SessionId = sessionID });
 

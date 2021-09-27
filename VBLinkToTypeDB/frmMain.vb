@@ -57,6 +57,7 @@ Public Class frmMain
             Button3.Text = "Create Session With Database"
             Button1.Enabled = True
             Button2.Enabled = False
+            Button3.Enabled = False
             Button4.Enabled = False
             Button5.Enabled = False
             client = Nothing
