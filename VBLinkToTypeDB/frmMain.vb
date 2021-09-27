@@ -18,7 +18,7 @@ Public Class frmMain
     End Sub
 
     Private Sub frmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-
+        ComboBox2.SelectedIndex = 2
     End Sub
 
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
@@ -27,11 +27,14 @@ Public Class frmMain
         client = New CoreClient(TextBox1.Text, CInt(TextBox2.Text))
         RichTextBox1.Text = $"Successfully connected to server on {TextBox1.Text}:{TextBox2.Text}"
         RichTextBox1.AppendText(vbCrLf)
+        Button1.Enabled = False
+        Button2.Enabled = True
 
     End Sub
 
     Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
 
+        ComboBox1.Items.Clear()
         RichTextBox1.AppendText(vbCrLf)
         'get all databases and add it to combobox
         ComboBox1.Items.AddRange(client.GetAllDatabases())
@@ -42,55 +45,143 @@ Public Class frmMain
             RichTextBox1.AppendText($"found databse with name ""{dbName}""")
             RichTextBox1.AppendText(vbCrLf)
         Next
+        Button3.Enabled = True
 
     End Sub
 
     Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
 
-        'connect to selected database from combo box and create session + pulse automatically.
-        Call client.OpenDatabase(ComboBox1.SelectedItem.ToString())
-        RichTextBox1.AppendText($"session successfully opened for database ""{ComboBox1.SelectedItem}""")
-        RichTextBox1.AppendText(vbCrLf)
-        RichTextBox1.AppendText(vbCrLf)
+        If Button3.Text = "Close Session" Then
+
+            client.CloseDatabase()
+            Button3.Text = "Create Session With Database"
+            Button1.Enabled = True
+            Button2.Enabled = False
+            Button4.Enabled = False
+            Button5.Enabled = False
+            client = Nothing
+
+        Else
+
+            'connect to selected database from combo box and create session + pulse automatically.
+            Call client.OpenDatabase(ComboBox1.SelectedItem.ToString())
+            RichTextBox1.AppendText($"session successfully opened for database ""{ComboBox1.SelectedItem}""")
+            RichTextBox1.AppendText(vbCrLf)
+            RichTextBox1.AppendText(vbCrLf)
+            Button3.Text = "Close Session"
+            Button1.Enabled = False
+            Button2.Enabled = False
+            Button4.Enabled = True
+            Button5.Enabled = True
+
+        End If
 
     End Sub
 
-    Private Async Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
+    Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
 
-        'this is how we setup a match query, for different query type you have to use different property of query object
-        Dim query As New QueryManager.Types.Req() With {
-            .MatchReq = New QueryManager.Types.Match.Types.Req() With {.Query = TextBox3.Text},
-            .Options = New Options() With {.Parallel = True}
-        }
+        Dim iid As Google.Protobuf.ByteString = Nothing
+        Dim rsult = client.ExecuteQuery(TextBox3.Text, ComboBox2.SelectedIndex)
+        For Each conc In rsult
 
-        'clear the existing transactions if there are any.
-        client.transactionClient.Reqs.Clear()
-        'you can add multiple transaction queries at once
-        client.transactionClient.Reqs.Add(New Transaction.Types.Req() With {.QueryManagerReq = query, .ReqId = client.SessionID})
-        'write the transaction to bi-directional stream
-        Await client.Transactions.RequestStream.WriteAsync(client.transactionClient)
-
-        Dim ServerResp As Transaction.Types.Server = Nothing
-        'this is like an enumrator, you have to call MoveNext for every chunk of data you will receive
-        Do While Await client.Transactions.ResponseStream.MoveNext(Threading.CancellationToken.None)
-            ServerResp = client.Transactions.ResponseStream.Current 'set the current enumrator object to local so can access it shortly
-
-            'this is check if the stream have done sending the data and we exit the loop,
-            'if this miss you will stuck on MoveNext 
-            If ServerResp.ResPart.ResCase = Transaction.Types.ResPart.ResOneofCase.StreamResPart AndAlso
-                ServerResp.ResPart.StreamResPart.State = Transaction.Types.Stream.Types.State.Done Then
-                Exit Do
-            End If
-
-            'this will be different according to your scenario. you need to use breakpoint to see data
-            'to implement better logic here. "Answers" below is the array of ConceptMap
-            For Each itm In ServerResp.ResPart.QueryManagerResPart.MatchResPart.Answers.ToArray()
-                Dim cncpt As Concept = Nothing 'this will be used to get the concept from conceptMap so you can access values.
-                itm.Map.TryGetValue("fn", cncpt) 'you can get the maping key from your query
-                AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Value.String}")
+            Dim cncpts As Concept() = New Concept(conc.Map.Count - 1) {}
+            For i = 0 To conc.Map.Count - 1
+                conc.Map.TryGetValue(conc.Map.Keys(i), cncpts(i)) 'you can get the maping key from your query
             Next
 
-        Loop
+            For i = 0 To cncpts.Length - 1
+                If Not IsNothing(cncpts(i).Thing?.Iid) Then
+                    iid = cncpts(i).Thing.Iid
+                End If
+                CheckConceptData(cncpts(i))
+            Next
+
+        Next
+        If rsult.Count() <= 0 Then
+            AddValuesToTextBox($"[{DateTime.Now}] request Completed")
+        End If
 
     End Sub
+
+    Private Sub CheckConceptData(cncpt As Concept)
+
+        Select Case cncpt.ConceptCase
+            Case Concept.ConceptOneofCase.Type
+                AddValuesToTextBox($"[{DateTime.Now}] {cncpt.Type.Label} - [{cncpt.Type.Encoding} - {cncpt.Type.ValueType}]")
+                Exit Select
+
+            Case Concept.ConceptOneofCase.Thing
+                Select Case cncpt.Thing.Type.ValueType
+                    Case AttributeType.Types.ValueType.Boolean
+                        AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Type.Label} - {cncpt.Thing.Value.Boolean}")
+                        Exit Select
+                    Case AttributeType.Types.ValueType.String
+                        AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Type.Label} - {cncpt.Thing.Value.String}")
+                        Exit Select
+                    Case AttributeType.Types.ValueType.Datetime
+                        AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Type.Label} - {cncpt.Thing.Value.DateTime}")
+                        Exit Select
+                    Case AttributeType.Types.ValueType.Double
+                        AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Type.Label} - {cncpt.Thing.Value.Double}")
+                        Exit Select
+                    Case AttributeType.Types.ValueType.Long
+                        AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Type.Label} - {cncpt.Thing.Value.Long}")
+                        Exit Select
+                    Case AttributeType.Types.ValueType.Object
+                        AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Type.Label} - {cncpt.Thing.Value}")
+                        Exit Select
+                End Select
+                Exit Select
+
+            Case Else
+                AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Value.String}")
+        End Select
+
+    End Sub
+
+    Private Sub Button5_Click(sender As Object, e As EventArgs) Handles Button5.Click
+
+        TreeView1.Nodes.Clear()
+
+        ' THIS WILL GET ALL THE ENTITIES
+        Dim nodeEntities = TreeView1.Nodes.Add("Entities")
+        Dim Entities = client.GetAllEntities()
+        For Each entity In Entities
+
+            Dim cncpts As Concept = Nothing
+            entity.Map.TryGetValue(entity.Map.FirstOrDefault.Key, cncpts)
+
+            Dim nodeEntity = nodeEntities.Nodes.Add($"{cncpts.Type.Label} [{cncpts.Type.Encoding}]")
+            Try
+                Dim attributes = client.GetAttributes(cncpts.Type.Label)
+                For Each attribute In attributes.Keys.ToArray()
+                    nodeEntity.Nodes.Add($"{attribute} [{attributes(attribute).Encoding}]")
+                Next
+            Catch ex As Exception
+            End Try
+
+
+        Next
+
+        ' THIS WILL GET ALL THE RELATIONS
+        Dim nodeRelations = TreeView1.Nodes.Add("Relations")
+        Dim Relations = client.GetAllRelations()
+        For Each Relation In Relations
+
+            Dim cncpts As Concept = Nothing
+            Relation.Map.TryGetValue(Relation.Map.FirstOrDefault.Key, cncpts)
+
+            Dim nodeRelation = nodeRelations.Nodes.Add($"{cncpts.Type.Label} [{cncpts.Type.Encoding}]")
+            Try
+                Dim attributes = client.GetAttributes(cncpts.Type.Label)
+                For Each attribute In attributes.Keys.ToArray()
+                    nodeRelation.Nodes.Add($"{attribute} [{attributes(attribute).Encoding}]")
+                Next
+            Catch ex As Exception
+            End Try
+
+        Next
+
+    End Sub
+
 End Class
