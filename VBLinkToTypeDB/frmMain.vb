@@ -69,6 +69,7 @@ Public Class frmMain
             RichTextBox1.AppendText($"session successfully opened for database ""{ComboBox1.SelectedItem}""")
             RichTextBox1.AppendText(vbCrLf)
             RichTextBox1.AppendText(vbCrLf)
+            'RichTextBox1.AppendText(client.GetSchema)
             Button3.Text = "Close Session"
             Button1.Enabled = False
             Button2.Enabled = False
@@ -146,41 +147,45 @@ Public Class frmMain
 
         ' THIS WILL GET ALL THE ENTITIES
         Dim nodeEntities = TreeView1.Nodes.Add("Entities")
-        Dim Entities = client.GetAllEntities()
+        Dim Entities = client.getEntities()
         For Each entity In Entities
 
-            Dim cncpts As Concept = Nothing
-            entity.Map.TryGetValue(entity.Map.FirstOrDefault.Key, cncpts)
-
-            Dim nodeEntity = nodeEntities.Nodes.Add($"{cncpts.Type.Label} [{cncpts.Type.Encoding}]")
+            Dim nodeEntity = nodeEntities.Nodes.Add($"{entity.Label}")
             Try
-                Dim attributes = client.GetAttributes(cncpts.Type.Label)
-                For Each attribute In attributes.Keys.ToArray()
-                    nodeEntity.Nodes.Add($"{attribute} [{attributes(attribute).Encoding}]")
+                Dim attributes = client.getAttributes(entity.Label)
+                For Each attribute In attributes
+                    nodeEntity.Nodes.Add($"{attribute.Label} [{attribute.ValueType}]")
+                Next
+                attributes = client.getPlays(entity.Label)
+                For Each attribute In attributes
+                    nodeEntity.Nodes.Add($"plays {attribute.Scope}:{attribute.Label}")
                 Next
             Catch ex As Exception
             End Try
-
 
         Next
 
         ' THIS WILL GET ALL THE RELATIONS
         Dim nodeRelations = TreeView1.Nodes.Add("Relations")
-        Dim Relations = client.GetAllRelations()
+        Dim Relations = client.getRelations()
         For Each Relation In Relations
 
-            Dim cncpts As Concept = Nothing
-            Relation.Map.TryGetValue(Relation.Map.FirstOrDefault.Key, cncpts)
-
-            Dim nodeRelation = nodeRelations.Nodes.Add($"{cncpts.Type.Label} [{cncpts.Type.Encoding}]")
+            Dim nodeRelation = nodeRelations.Nodes.Add($"{Relation.Label}")
             Try
-                Dim attributes = client.GetAttributes(cncpts.Type.Label)
-                For Each attribute In attributes.Keys.ToArray()
-                    nodeRelation.Nodes.Add($"{attribute} [{attributes(attribute).Encoding}]")
+                Dim attributes = client.getRelates(Relation.Label)
+                For Each attribute In attributes
+                    nodeRelation.Nodes.Add($"{attribute.Label} [{attribute.Encoding}]")
                 Next
             Catch ex As Exception
             End Try
 
+        Next
+
+        ' THIS WILL GET ALL THE ATTRIBUTES 
+        Dim nodeAttributes = TreeView1.Nodes.Add("Attributes")
+        Dim attributesTypes = client.getAllAttributes()
+        For Each attribute In attributesTypes
+            nodeAttributes.Nodes.Add($"{attribute.Label} [{attribute.ValueType}]")
         Next
 
     End Sub

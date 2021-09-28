@@ -218,7 +218,7 @@ namespace TypeDBCustom
         /// </summary>
         private static readonly Transaction.Types.Req trans_commit = new Transaction.Types.Req()
         {
-            CommitReq = new Transaction.Types.Commit.Types.Req() { }
+            CommitReq = new Transaction.Types.Commit.Types.Req() { },
         };
         
         /// <summary>
@@ -407,7 +407,7 @@ namespace TypeDBCustom
             transactionClient.Reqs.Clear();
             //you can add multiple transaction queries at once
             transactionClient.Reqs.Add(new Transaction.Types.Req() { 
-                QueryManagerReq = query, 
+                QueryManagerReq = query,
                 ReqId = ReqID
             });
             //write the transaction to bi-directional stream
@@ -499,47 +499,11 @@ namespace TypeDBCustom
         }
 
         /// <summary>
-        /// This function will return all the attributes available in database
-        /// </summary>
-        public IEnumerable<ConceptMap> GetAllAttributes()
-        {
-
-            var results = ExecuteQuery("match $x sub attribute; get $x;", QueryType.Match);
-            foreach (var result in results)
-                yield return result;
-
-        }
-
-        /// <summary>
-        /// This function will return all the relations available in database
-        /// </summary>
-        public IEnumerable<ConceptMap> GetAllRelations()
-        {
-             
-            var results = ExecuteQuery("match $x sub relation; get $x;", QueryType.Match);
-            foreach (var result in results)
-                yield return result;
-
-        }
-
-        /// <summary>
-        /// This function will return all the entities available in database
-        /// </summary>
-        public IEnumerable<ConceptMap> GetAllEntities()
-        {
-             
-            var results = ExecuteQuery("match $x sub entity; get $x;", QueryType.Match);
-            foreach (var result in results)
-                yield return result;
-
-        }
-
-        /// <summary>
         /// This function will return all the attributes of specific entity
         /// this function also work with relation names
         /// </summary>
         /// <param name="typeName">Name of the entity or Relation</param>
-        public Dictionary<string, GrpcServer.Type> GetAttributes(string typeName)
+        [Obsolete] public Dictionary<string, GrpcServer.Type> QueryAttributes(string typeName)
         {
 
             // initialize the new dictionary to hold the concepts
@@ -577,7 +541,321 @@ namespace TypeDBCustom
 
         }
 
-        #endregion
+        #endregion 
+
+        #region Extension
+
+        /// <summary>
+        /// This function will return all the entities available in database
+        /// </summary>
+        public GrpcServer.Type[] getEntities()
+        {
+            return getSubTypes("entity");
+        }
+        /// <summary>
+        /// This function will return all the relations available in database
+        /// </summary>
+        public GrpcServer.Type[] getRelations()
+        {
+            return getSubTypes("relation");
+        }
+        /// <summary>
+        /// This function will return all the attributes available in database
+        /// </summary>
+        public GrpcServer.Type[] getAllAttributes()
+        {
+            return getSubTypes("attribute");
+        }
+
+        public GrpcServer.Type[] getSubTypes(string Label)
+        {
+
+            GrpcServer.Type[] results = new GrpcServer.Type[] { };
+
+            Google.Protobuf.ByteString sessionID = SessionID;
+            // this will be unique transaction id for this query
+            var ReqID = RandonReqId;
+            // creates the bi-directional stream for transactions
+            var Transactions = Client.transaction(null, null, CancellationToken.None);
+            // call the method to open transaction
+            OpenTransaction(ref sessionID, Transaction.Types.Type.Read, ref ReqID, ref Transactions);
+
+            // clear the existing transactions if there are any.
+            transactionClient.Reqs.Clear();
+            //you can add multiple transaction queries at once
+            transactionClient.Reqs.Add(new Transaction.Types.Req()
+            {
+                TypeReq = new GrpcServer.Type.Types.Req()
+                {
+                    Label = Label,
+                    TypeGetSubtypesReq = new GrpcServer.Type.Types.GetSubtypes.Types.Req() { }
+                },
+                ReqId = ReqID
+            });
+            //write the transaction to bi-directional stream
+            Transactions.RequestStream.WriteAsync(transactionClient).GetAwaiter().GetResult();
+
+            Transaction.Types.Server ServerResp = null;
+            // this is like an enumrator, you have to call MoveNext for every chunk of data you will receive
+            while (Transactions.ResponseStream.MoveNext(CancellationToken.None).GetAwaiter().GetResult())
+            {
+                ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
+
+                if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
+                    break;
+
+                Debug.WriteLine($"{Label}: {ServerResp}");
+                results = ServerResp.ResPart.TypeResPart.TypeGetSubtypesResPart.Types_.ToArray();
+
+            }
+            // closes the stream
+            CloseTransaction(ref Transactions);
+
+            return results;
+
+        }
+
+        public GrpcServer.Type[] getSuperTypes(string Label)
+        {
+
+            GrpcServer.Type[] results = new GrpcServer.Type[] { };
+
+            Google.Protobuf.ByteString sessionID = SessionID;
+            // this will be unique transaction id for this query
+            var ReqID = RandonReqId;
+            // creates the bi-directional stream for transactions
+            var Transactions = Client.transaction(null, null, CancellationToken.None);
+            // call the method to open transaction
+            OpenTransaction(ref sessionID, Transaction.Types.Type.Read, ref ReqID, ref Transactions);
+
+            // clear the existing transactions if there are any.
+            transactionClient.Reqs.Clear();
+            //you can add multiple transaction queries at once
+            transactionClient.Reqs.Add(new Transaction.Types.Req()
+            {
+                TypeReq = new GrpcServer.Type.Types.Req()
+                {
+                    Label = Label,
+                    TypeGetSupertypesReq = new GrpcServer.Type.Types.GetSupertypes.Types.Req() { }
+                },
+                ReqId = ReqID
+            });
+            //write the transaction to bi-directional stream
+            Transactions.RequestStream.WriteAsync(transactionClient).GetAwaiter().GetResult();
+
+            Transaction.Types.Server ServerResp = null;
+            // this is like an enumrator, you have to call MoveNext for every chunk of data you will receive
+            while (Transactions.ResponseStream.MoveNext(CancellationToken.None).GetAwaiter().GetResult())
+            {
+                ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
+
+                if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
+                    break;
+
+                Debug.WriteLine($"{Label}: {ServerResp}");
+                results = ServerResp.ResPart.TypeResPart.TypeGetSupertypesResPart.Types_.ToArray();
+
+            }
+            // closes the stream
+            CloseTransaction(ref Transactions);
+
+            return results;
+
+        }
+
+        public GrpcServer.Type[] getRelates(string Label)
+        {
+
+            GrpcServer.Type[] results = null;
+            
+            Google.Protobuf.ByteString sessionID = SessionID;
+            // this will be unique transaction id for this query
+            var ReqID = RandonReqId;
+            // creates the bi-directional stream for transactions
+            var Transactions = Client.transaction(null, null, CancellationToken.None);
+            // call the method to open transaction
+            OpenTransaction(ref sessionID, Transaction.Types.Type.Read, ref ReqID, ref Transactions);
+
+            // clear the existing transactions if there are any.
+            transactionClient.Reqs.Clear();
+            //you can add multiple transaction queries at once
+            transactionClient.Reqs.Add(new Transaction.Types.Req()
+            {
+                TypeReq = new GrpcServer.Type.Types.Req() {
+                    Label = Label,
+                    RelationTypeGetRelatesReq = new RelationType.Types.GetRelates.Types.Req()
+                },
+                ReqId = ReqID
+            });
+            //write the transaction to bi-directional stream
+            Transactions.RequestStream.WriteAsync(transactionClient).GetAwaiter().GetResult();
+            
+            Transaction.Types.Server ServerResp = null;
+            // this is like an enumrator, you have to call MoveNext for every chunk of data you will receive
+            while (Transactions.ResponseStream.MoveNext(CancellationToken.None).GetAwaiter().GetResult())
+            {
+                ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
+
+                if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
+                    break;
+
+                Debug.WriteLine($"{Label}: {ServerResp}");
+                results = ServerResp.ResPart.TypeResPart.RelationTypeGetRelatesResPart.Roles.ToArray();
+
+            }
+            // closes the stream
+            CloseTransaction(ref Transactions);
+
+            return results;
+
+        }
+         
+        public GrpcServer.Type[] getAttributes(string Label)
+        {
+
+            GrpcServer.Type[] results = new GrpcServer.Type[] { };
+            
+            Google.Protobuf.ByteString sessionID = SessionID;
+            // this will be unique transaction id for this query
+            var ReqID = RandonReqId;
+            // creates the bi-directional stream for transactions
+            var Transactions = Client.transaction(null, null, CancellationToken.None);
+            // call the method to open transaction
+            OpenTransaction(ref sessionID, Transaction.Types.Type.Read, ref ReqID, ref Transactions);
+
+            // clear the existing transactions if there are any.
+            transactionClient.Reqs.Clear();
+            //you can add multiple transaction queries at once
+            transactionClient.Reqs.Add(new Transaction.Types.Req()
+            {
+                TypeReq = new GrpcServer.Type.Types.Req()
+                {
+                    Label = Label,
+                    ThingTypeGetOwnsReq = new ThingType.Types.GetOwns.Types.Req() { KeysOnly = false}
+                },
+                ReqId = ReqID
+            });
+            //write the transaction to bi-directional stream
+            Transactions.RequestStream.WriteAsync(transactionClient).GetAwaiter().GetResult();
+            
+            Transaction.Types.Server ServerResp = null;
+            // this is like an enumrator, you have to call MoveNext for every chunk of data you will receive
+            while (Transactions.ResponseStream.MoveNext(CancellationToken.None).GetAwaiter().GetResult())
+            {
+                ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
+
+                if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
+                    break;
+
+                Debug.WriteLine($"{Label}: {ServerResp}");
+                results = ServerResp.ResPart.TypeResPart.ThingTypeGetOwnsResPart.AttributeTypes.ToArray();
+
+            }
+            // closes the stream
+            CloseTransaction(ref Transactions);
+
+            return results;
+
+        }
+
+        public GrpcServer.Type[] getPlays(string Label)
+        {
+             
+            GrpcServer.Type[] results = new GrpcServer.Type[] { };
+            
+            Google.Protobuf.ByteString sessionID = SessionID;
+            // this will be unique transaction id for this query
+            var ReqID = RandonReqId;
+            // creates the bi-directional stream for transactions
+            var Transactions = Client.transaction(null, null, CancellationToken.None);
+            // call the method to open transaction
+            OpenTransaction(ref sessionID, Transaction.Types.Type.Read, ref ReqID, ref Transactions);
+
+            // clear the existing transactions if there are any.
+            transactionClient.Reqs.Clear();
+            //you can add multiple transaction queries at once
+            transactionClient.Reqs.Add(new Transaction.Types.Req()
+            {
+                TypeReq = new GrpcServer.Type.Types.Req()
+                {
+                    Label = Label,
+                    ThingTypeGetPlaysReq = new ThingType.Types.GetPlays.Types.Req() { }
+                },
+                ReqId = ReqID
+            });
+            //write the transaction to bi-directional stream
+            Transactions.RequestStream.WriteAsync(transactionClient).GetAwaiter().GetResult();
+            
+            Transaction.Types.Server ServerResp = null;
+            // this is like an enumrator, you have to call MoveNext for every chunk of data you will receive
+            while (Transactions.ResponseStream.MoveNext(CancellationToken.None).GetAwaiter().GetResult())
+            {
+                ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
+
+                if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
+                    break;
+
+                Debug.WriteLine($"{Label}: {ServerResp}");
+                results = ServerResp.ResPart.TypeResPart.ThingTypeGetPlaysResPart.Roles.ToArray();
+
+            }
+            // closes the stream
+            CloseTransaction(ref Transactions);
+
+            return results;
+
+        }
+
+        public GrpcServer.Thing[] getInstances(string Label)
+        {
+             
+            GrpcServer.Thing[] results = new GrpcServer.Thing[] { };
+            
+            Google.Protobuf.ByteString sessionID = SessionID;
+            // this will be unique transaction id for this query
+            var ReqID = RandonReqId;
+            // creates the bi-directional stream for transactions
+            var Transactions = Client.transaction(null, null, CancellationToken.None);
+            // call the method to open transaction
+            OpenTransaction(ref sessionID, Transaction.Types.Type.Read, ref ReqID, ref Transactions);
+
+            // clear the existing transactions if there are any.
+            transactionClient.Reqs.Clear();
+            //you can add multiple transaction queries at once
+            transactionClient.Reqs.Add(new Transaction.Types.Req()
+            {
+                TypeReq = new GrpcServer.Type.Types.Req()
+                {
+                    Label = Label,
+                    ThingTypeGetInstancesReq = new ThingType.Types.GetInstances.Types.Req() { }
+                },
+                ReqId = ReqID
+            });
+            //write the transaction to bi-directional stream
+            Transactions.RequestStream.WriteAsync(transactionClient).GetAwaiter().GetResult();
+            var Headers = Transactions.ResponseHeadersAsync.GetAwaiter().GetResult();
+
+            Transaction.Types.Server ServerResp = null;
+            // this is like an enumrator, you have to call MoveNext for every chunk of data you will receive
+            while (Transactions.ResponseStream.MoveNext(CancellationToken.None).GetAwaiter().GetResult())
+            {
+                ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
+
+                if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
+                    break;
+
+                Debug.WriteLine($"{Label}: {ServerResp}");
+                results = ServerResp.ResPart.TypeResPart?.ThingTypeGetInstancesResPart.Things.ToArray();
+
+            }
+            // closes the stream
+            CloseTransaction(ref Transactions);
+
+            return results;
+
+        }
+
+        #endregion 
 
     }
 }
