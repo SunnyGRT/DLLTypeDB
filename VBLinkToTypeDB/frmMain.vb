@@ -6,14 +6,18 @@ Public Class frmMain
     'this is the client we build in C# 
     Private client As CoreClient = Nothing
 
-    Private Sub AddValuesToTextBox(msg As String)
+    Private Sub AddValuesToTextBox(Optional msg As String = "")
         If Me.InvokeRequired Then
             Me.Invoke(Sub() AddValuesToTextBox(msg))
             Return
         End If
 
-        RichTextBox1.AppendText(msg)
-        RichTextBox1.AppendText(vbCrLf)
+        If msg = "" Then
+            RichTextBox1.AppendText(vbCrLf)
+        Else
+            RichTextBox1.AppendText(msg)
+            RichTextBox1.AppendText(vbCrLf)
+        End If
 
     End Sub
 
@@ -84,28 +88,36 @@ Public Class frmMain
 
         Dim iid As Google.Protobuf.ByteString = Nothing
         Dim rsult = client.ExecuteQuery(TextBox3.Text, ComboBox2.SelectedIndex)
-        For Each conc In rsult
+        Try
 
-            Dim cncpts As Concept() = New Concept(conc.Map.Count - 1) {}
-            For i = 0 To conc.Map.Count - 1
-                conc.Map.TryGetValue(conc.Map.Keys(i), cncpts(i)) 'you can get the maping key from your query
+            For Each conc In rsult
+
+                Dim cncpts As Concept() = New Concept(conc.Map.Count - 1) {}
+                For i = 0 To conc.Map.Count - 1
+                    conc.Map.TryGetValue(conc.Map.Keys(i), cncpts(i)) 'you can get the maping key from your query
+
+                    If Not IsNothing(cncpts(i).Thing?.Iid) Then
+                        iid = cncpts(i).Thing.Iid
+                    End If
+                    CheckConceptData(cncpts(i), conc.Map.Keys(i))
+
+                Next
+                Erase cncpts
+                AddValuesToTextBox()
+
             Next
+            If rsult.Count() <= 0 Then
+                AddValuesToTextBox($"[{DateTime.Now}] request Completed")
+            End If
+            AddValuesToTextBox()
 
-            For i = 0 To cncpts.Length - 1
-                If Not IsNothing(cncpts(i).Thing?.Iid) Then
-                    iid = cncpts(i).Thing.Iid
-                End If
-                CheckConceptData(cncpts(i))
-            Next
-
-        Next
-        If rsult.Count() <= 0 Then
-            AddValuesToTextBox($"[{DateTime.Now}] request Completed")
-        End If
+        Catch ex As Exception
+            MsgBox(ex.Message)
+        End Try
 
     End Sub
 
-    Private Sub CheckConceptData(cncpt As Concept)
+    Private Sub CheckConceptData(cncpt As Concept, mapKey As String)
 
         Select Case cncpt.ConceptCase
             Case Concept.ConceptOneofCase.Type
@@ -115,22 +127,22 @@ Public Class frmMain
             Case Concept.ConceptOneofCase.Thing
                 Select Case cncpt.Thing.Type.ValueType
                     Case AttributeType.Types.ValueType.Boolean
-                        AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Type.Label} - {cncpt.Thing.Value.Boolean}")
+                        AddValuesToTextBox($"[{DateTime.Now}] {mapKey}: {cncpt.Thing.Value.Boolean} [{cncpt.Thing.Type.Label}]")
                         Exit Select
                     Case AttributeType.Types.ValueType.String
-                        AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Type.Label} - {cncpt.Thing.Value.String}")
+                        AddValuesToTextBox($"[{DateTime.Now}] {mapKey}: {cncpt.Thing.Value.String} [{cncpt.Thing.Type.Label}]")
                         Exit Select
                     Case AttributeType.Types.ValueType.Datetime
-                        AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Type.Label} - {cncpt.Thing.Value.DateTime}")
+                        AddValuesToTextBox($"[{DateTime.Now}] {mapKey}: {cncpt.Thing.Value.DateTime} [{cncpt.Thing.Type.Label}]")
                         Exit Select
                     Case AttributeType.Types.ValueType.Double
-                        AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Type.Label} - {cncpt.Thing.Value.Double}")
+                        AddValuesToTextBox($"[{DateTime.Now}] {mapKey}: {cncpt.Thing.Value.Double} [{cncpt.Thing.Type.Label}]")
                         Exit Select
                     Case AttributeType.Types.ValueType.Long
-                        AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Type.Label} - {cncpt.Thing.Value.Long}")
+                        AddValuesToTextBox($"[{DateTime.Now}] {mapKey}: {cncpt.Thing.Value.Long} [{cncpt.Thing.Type.Label}]")
                         Exit Select
                     Case AttributeType.Types.ValueType.Object
-                        AddValuesToTextBox($"[{DateTime.Now}] received response: {cncpt.Thing.Type.Label} - {cncpt.Thing.Value}")
+                        AddValuesToTextBox($"[{DateTime.Now}] {mapKey}: {If(cncpt.Thing.Value, "null")} [{cncpt.Thing.Type.Label}]")
                         Exit Select
                 End Select
                 Exit Select
