@@ -11,16 +11,6 @@ using GrpcServer;
 namespace TypeDBCustom
 { 
 
-    public enum QueryType
-    {
-        Define,
-        Undefine,
-        Match,
-        Update,
-        Delete,
-        Insert
-    }
-
     public class CoreClient
     {
 
@@ -335,75 +325,24 @@ namespace TypeDBCustom
         /// </summary>
         /// <param name="queryText">Query you want to execute</param>
         /// <returns></returns>
-        public IEnumerable<ConceptMap> ExecuteQuery(string queryText, QueryType queryType = QueryType.Match)
+        public IEnumerable<ConceptMap> ExecuteQuery(string queryText)
         {
 
-            // this will be used to hold the session if needed
-            Session.Types.Open.Types.Res session = null;
             Google.Protobuf.ByteString sessionID = SessionID;
             // this will be unique transaction id for this query
             var ReqID = RandonReqId;
             // creates the bi-directional stream for transactions
             var Transactions = Client.transaction(null, null, CancellationToken.None);
-            switch (queryType)
-            {
-                case QueryType.Update:
-                case QueryType.Delete:
-                case QueryType.Insert:
-                    // call the method to open transaction
-                    OpenTransaction(ref sessionID, Transaction.Types.Type.Write, ref ReqID, ref Transactions);
-                    break;
-
-                case QueryType.Define:
-                case QueryType.Undefine:
-                    //creates new session request and pass the database name session type as parameters. it will open new session for TypeDB server
-                    session = Client.session_open(new Session.Types.Open.Types.Req()
-                    {
-                        Database = CurrentDatabase,
-                        Type = Session.Types.Type.Schema
-                    }, null, null, CancellationToken.None);
-                    sessionID = session.SessionId;
-
-                    // call the method to open transaction
-                    OpenTransaction(ref sessionID, Transaction.Types.Type.Write, ref ReqID, ref Transactions);
-                    break;
-
-                case QueryType.Match:
-                default:
-                    // call the method to open transaction
-                    OpenTransaction(ref sessionID, Transaction.Types.Type.Read, ref ReqID, ref Transactions);
-                    break;
-            }            
+            // call the method to open transaction
+            OpenTransaction(ref sessionID, Transaction.Types.Type.Read, ref ReqID, ref Transactions);
 
             // this is how we setup a match query, for different query type you have to use different property of query object
             QueryManager.Types.Req query = new QueryManager.Types.Req()
-            {                
+            {
+                MatchReq = new QueryManager.Types.Match.Types.Req() { Query = queryText },
                 Options = new Options() { Parallel = true }
             };
-            switch (queryType)
-            {
-                case QueryType.Match:
-                    query.MatchReq = new QueryManager.Types.Match.Types.Req() { Query = queryText };
-                    break;
-                case QueryType.Define:
-                    query.DefineReq = new QueryManager.Types.Define.Types.Req() { Query = queryText };
-                    break;
-                case QueryType.Undefine:
-                    query.UndefineReq = new QueryManager.Types.Undefine.Types.Req() { Query = queryText };
-                    break;
-                case QueryType.Update:
-                    query.UpdateReq = new QueryManager.Types.Update.Types.Req() { Query = queryText };
-                    break;
-                case QueryType.Delete:
-                    query.DeleteReq = new QueryManager.Types.Delete.Types.Req() { Query = queryText };
-                    break;
-                case QueryType.Insert:
-                    query.InsertReq = new QueryManager.Types.Insert.Types.Req() { Query = queryText };
-                    break;
-                default:
-                    yield break;
-            }
-
+            
             // clear the existing transactions if there are any.
             transactionClient.Reqs.Clear();
             //you can add multiple transaction queries at once
@@ -474,28 +413,8 @@ namespace TypeDBCustom
 
             }
 
-            // check if the changes need to commit
-            switch (queryType)
-            {
-                case QueryType.Update:
-                case QueryType.Delete:
-                case QueryType.Insert:
-                case QueryType.Define:
-                case QueryType.Undefine:
-                    // commit the changes to server
-                    CommitChanges(ref ReqID, ref Transactions);
-                    break;
-
-                case QueryType.Match:
-                default:
-                    break;
-            }
             // closes the stream
             CloseTransaction(ref Transactions);
-
-            // check if new session created, then close it
-            if (session != null)
-                Client.session_close(new Session.Types.Close.Types.Req() { SessionId = sessionID });
 
         }
 

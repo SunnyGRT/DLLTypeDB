@@ -22,7 +22,7 @@ Public Class frmMain
     End Sub
 
     Private Sub frmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        ComboBox2.SelectedIndex = 2
+
     End Sub
 
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
@@ -87,7 +87,7 @@ Public Class frmMain
     Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
 
         Dim iid As Google.Protobuf.ByteString = Nothing
-        Dim rsult = client.ExecuteQuery(TextBox3.Text, ComboBox2.SelectedIndex)
+        Dim rsult = client.ExecuteQuery(TextBox3.Text)
         Try
 
             For Each conc In rsult

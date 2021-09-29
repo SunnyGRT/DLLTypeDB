@@ -34,7 +34,6 @@ Partial Class frmMain
         Me.TextBox3 = New System.Windows.Forms.TextBox()
         Me.Label3 = New System.Windows.Forms.Label()
         Me.Button4 = New System.Windows.Forms.Button()
-        Me.ComboBox2 = New System.Windows.Forms.ComboBox()
         Me.Button5 = New System.Windows.Forms.Button()
         Me.TreeView1 = New System.Windows.Forms.TreeView()
         Me.SuspendLayout()
@@ -75,9 +74,9 @@ Partial Class frmMain
         '
         'RichTextBox1
         '
-        Me.RichTextBox1.Location = New System.Drawing.Point(419, 35)
+        Me.RichTextBox1.Location = New System.Drawing.Point(419, 50)
         Me.RichTextBox1.Name = "RichTextBox1"
-        Me.RichTextBox1.Size = New System.Drawing.Size(577, 244)
+        Me.RichTextBox1.Size = New System.Drawing.Size(577, 229)
         Me.RichTextBox1.TabIndex = 4
         Me.RichTextBox1.Text = ""
         '
@@ -126,8 +125,9 @@ Partial Class frmMain
         Me.TextBox3.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest
         Me.TextBox3.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource
         Me.TextBox3.Location = New System.Drawing.Point(460, 9)
+        Me.TextBox3.Multiline = True
         Me.TextBox3.Name = "TextBox3"
-        Me.TextBox3.Size = New System.Drawing.Size(446, 20)
+        Me.TextBox3.Size = New System.Drawing.Size(535, 35)
         Me.TextBox3.TabIndex = 9
         Me.TextBox3.Text = "match $tra (traveler: $per) isa travel; (located: $tra, location: $loc) isa local" &
     "isation; $loc has name ""French Lick""; $per has full-name $fn; get $fn;"
@@ -150,16 +150,6 @@ Partial Class frmMain
         Me.Button4.TabIndex = 11
         Me.Button4.Text = "Execute Match Query"
         Me.Button4.UseVisualStyleBackColor = True
-        '
-        'ComboBox2
-        '
-        Me.ComboBox2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.ComboBox2.FormattingEnabled = True
-        Me.ComboBox2.Items.AddRange(New Object() {"Define", "Undefine", "Match", "Update", "Delete", "Insert"})
-        Me.ComboBox2.Location = New System.Drawing.Point(912, 9)
-        Me.ComboBox2.Name = "ComboBox2"
-        Me.ComboBox2.Size = New System.Drawing.Size(84, 21)
-        Me.ComboBox2.TabIndex = 12
         '
         'Button5
         '
@@ -185,7 +175,6 @@ Partial Class frmMain
         Me.ClientSize = New System.Drawing.Size(1007, 291)
         Me.Controls.Add(Me.TreeView1)
         Me.Controls.Add(Me.Button5)
-        Me.Controls.Add(Me.ComboBox2)
         Me.Controls.Add(Me.Button4)
         Me.Controls.Add(Me.Label3)
         Me.Controls.Add(Me.TextBox3)
@@ -217,7 +206,6 @@ Partial Class frmMain
     Friend WithEvents TextBox3 As TextBox
     Friend WithEvents Label3 As Label
     Friend WithEvents Button4 As Button
-    Friend WithEvents ComboBox2 As ComboBox
     Friend WithEvents Button5 As Button
     Friend WithEvents TreeView1 As TreeView
 End Class
