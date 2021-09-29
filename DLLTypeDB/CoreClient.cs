@@ -335,7 +335,7 @@ namespace TypeDBCustom
         /// </summary>
         /// <param name="queryText">Query you want to execute</param>
         /// <returns></returns>
-        public IEnumerable<ConceptMap> ExecuteQuery(string queryText, QueryType queryType)
+        public IEnumerable<ConceptMap> ExecuteQuery(string queryText, QueryType queryType = QueryType.Match)
         {
 
             // this will be used to hold the session if needed
@@ -503,11 +503,16 @@ namespace TypeDBCustom
 
         #region Extension
 
+        /// <summary>
+        /// This function will extract the Label value from a concept
+        /// A concept has Type and Thing. this function checks for both
+        /// </summary>
+        /// <param name="concept">Concept object for which you need label</param>
+        /// <returns></returns>
         public string getLabel(Concept concept)
         {
             return concept.Thing != null ? concept.Thing.Type.Label : concept.Type.Label;
         }
-
         /// <summary>
         /// This function will return all the entities available in database
         /// </summary>
@@ -530,6 +535,12 @@ namespace TypeDBCustom
             return getSubTypes("attribute");
         }
 
+        /// <summary>
+        /// This function used to get all the descendants of provided type
+        /// e.g For entity its shows attributes, for relation it shows plays
+        /// </summary>
+        /// <param name="Label">Label of type which you want to get descendants</param>
+        /// <returns></returns>
         public GrpcServer.Type[] getSubTypes(string Label)
         {
 
@@ -578,6 +589,10 @@ namespace TypeDBCustom
 
         }
 
+        /// <summary>
+        /// not tested yet
+        /// </summary>
+        /// <param name="Label">Label of type</param>
         public GrpcServer.Type[] getSuperTypes(string Label)
         {
 
@@ -626,6 +641,11 @@ namespace TypeDBCustom
 
         }
 
+        /// <summary>
+        /// This function returns the plays for a relation type
+        /// </summary>
+        /// <param name="Label">Label for relation</param>
+        /// <returns></returns>
         public GrpcServer.Type[] getRelates(string Label)
         {
 
@@ -673,6 +693,11 @@ namespace TypeDBCustom
 
         }
          
+        /// <summary>
+        /// This method will return all the attributes for a Type
+        /// </summary>
+        /// <param name="Label">label of type</param>
+        /// <returns></returns>
         public GrpcServer.Type[] getAttributes(string Label)
         {
 
@@ -721,6 +746,11 @@ namespace TypeDBCustom
 
         }
 
+        /// <summary>
+        /// This function will return all the plays (Relations)
+        /// </summary>
+        /// <param name="Label">Label for thing you want to get relations</param>
+        /// <returns></returns>
         public GrpcServer.Type[] getPlays(string Label)
         {
              
@@ -769,6 +799,12 @@ namespace TypeDBCustom
 
         }
 
+        /// <summary>
+        /// This method will get all the available records or Instances 
+        /// for a specified Type, it can be entity or relation
+        /// </summary>
+        /// <param name="Label">Name of Entity or Relation</param>
+        /// <returns></returns>
         public GrpcServer.Thing[] getInstances(string Label)
         {
              
@@ -818,6 +854,11 @@ namespace TypeDBCustom
 
         }
 
+        /// <summary>
+        /// This method will get the Thing for specified Iid
+        /// </summary>
+        /// <param name="iid">Iid to get the Thing</param>
+        /// <returns></returns>
         public Thing getThing(Google.Protobuf.ByteString iid)
         {
 
@@ -845,19 +886,13 @@ namespace TypeDBCustom
             //write the transaction to bi-directional stream
             Transactions.RequestStream.WriteAsync(transactionClient).GetAwaiter().GetResult();
 
-            Transaction.Types.Server ServerResp = null;
-            // this is like an enumrator, you have to call MoveNext for every chunk of data you will receive
-            while (Transactions.ResponseStream.MoveNext(CancellationToken.None).GetAwaiter().GetResult())
-            {
-                ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
+            // set the current enumrator object to local so can access it shortly
+            Transactions.ResponseStream.MoveNext().GetAwaiter().GetResult();
+            Transaction.Types.Server ServerResp = Transactions.ResponseStream.Current; 
 
-                if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
-                    break;
-
-                Debug.WriteLine($"{iid}: {ServerResp}");
-                result = ServerResp.Res.ConceptManagerRes.GetThingRes.Thing;
-
-            }
+            Debug.WriteLine($"{iid}: {ServerResp}");
+            result = ServerResp.Res.ConceptManagerRes.GetThingRes.Thing;
+            
             // closes the stream
             CloseTransaction(ref Transactions);
              
@@ -865,6 +900,11 @@ namespace TypeDBCustom
 
         }
 
+        /// <summary>
+        /// This function is used to get the players of one relation.
+        /// </summary>
+        /// <param name="ThingIid">Provide the Thing Iid for Relation</param>
+        /// <returns></returns>
         public Thing[] getPlayers(Google.Protobuf.ByteString ThingIid)
         {
 
@@ -913,6 +953,11 @@ namespace TypeDBCustom
 
         }
 
+        /// <summary>
+        /// This function is used to get the relating for one relation
+        /// </summary>
+        /// <param name="ThingIid">Provide the Thing Iid for Relation</param>
+        /// <returns></returns>
         public GrpcServer.Type[] getRelating(Google.Protobuf.ByteString ThingIid)
         {
 
@@ -961,10 +1006,13 @@ namespace TypeDBCustom
 
         }
 
-        public Thing[] getRelations(Google.Protobuf.ByteString ThingIid)
+        /// <summary>
+        /// This function will yield all the relations of an Entity or attribute
+        /// </summary>
+        /// <param name="ThingIid">Iid For Entity or attribute</param>
+        /// <returns></returns>
+        public IEnumerable<Thing> getRelations(Google.Protobuf.ByteString ThingIid)
         {
-
-            Thing[] result = new Thing[] { };
 
             Google.Protobuf.ByteString sessionID = SessionID;
             // this will be unique transaction id for this query
@@ -998,8 +1046,61 @@ namespace TypeDBCustom
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
 
+                Debug.WriteLine($"{ThingIid.ToBase64()}: {ServerResp}");
+                foreach (var relation in ServerResp.ResPart.ThingResPart?.ThingGetRelationsResPart.Relations)
+                    yield return relation;
+                
+            }
+            // closes the stream
+            CloseTransaction(ref Transactions);
+
+        }
+
+        /// <summary>
+        /// This function will return all the attributes of Thing type
+        /// These attributes also include the values
+        /// </summary>
+        /// <param name="ThingIid">Iid of Thing Type</param>
+        /// <returns></returns>
+        public Thing[] getHas(Google.Protobuf.ByteString ThingIid)
+        {
+
+            Thing[] result = new Thing[] { };
+
+            Google.Protobuf.ByteString sessionID = SessionID;
+            // this will be unique transaction id for this query
+            var ReqID = RandonReqId;
+            // creates the bi-directional stream for transactions
+            var Transactions = Client.transaction(null, null, CancellationToken.None);
+            // call the method to open transaction
+            OpenTransaction(ref sessionID, Transaction.Types.Type.Read, ref ReqID, ref Transactions);
+
+            // clear the existing transactions if there are any.
+            transactionClient.Reqs.Clear();
+            //you can add multiple transaction queries at once
+            transactionClient.Reqs.Add(new Transaction.Types.Req()
+            {
+                ThingReq = new Thing.Types.Req()
+                {
+                    Iid = ThingIid,
+                    ThingGetHasReq = new Thing.Types.GetHas.Types.Req() { KeysOnly = false }
+                },
+                ReqId = ReqID
+            });
+            //write the transaction to bi-directional stream
+            Transactions.RequestStream.WriteAsync(transactionClient).GetAwaiter().GetResult();
+
+            Transaction.Types.Server ServerResp = null;
+            // this is like an enumrator, you have to call MoveNext for every chunk of data you will receive
+            while (Transactions.ResponseStream.MoveNext(CancellationToken.None).GetAwaiter().GetResult())
+            {
+                ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
+
+                if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
+                    break;
+
                 Debug.WriteLine($"{ThingIid}: {ServerResp}");
-                result = ServerResp.ResPart.ThingResPart.ThingGetRelationsResPart.Relations.ToArray();
+                result = ServerResp.ResPart.ThingResPart.ThingGetHasResPart.Attributes.ToArray();
 
             }
             // closes the stream
