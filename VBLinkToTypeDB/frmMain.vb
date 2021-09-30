@@ -142,7 +142,15 @@ Public Class frmMain
                         AddValuesToTextBox($"[{DateTime.Now}] {mapKey}: {cncpt.Thing.Value.Long} [{cncpt.Thing.Type.Label}]")
                         Exit Select
                     Case AttributeType.Types.ValueType.Object
-                        AddValuesToTextBox($"[{DateTime.Now}] {mapKey}: {If(cncpt.Thing.Value, cncpt.Thing.Iid.ToBase64)} [{cncpt.Thing.Type.Label}]")
+                        'AddValuesToTextBox($"[{DateTime.Now}] {mapKey}: {If(cncpt.Thing.Value, cncpt.Thing.Iid.ToBase64)} [{cncpt.Thing.Type.Label}]")
+                        Dim lsFieldValue As String = ""
+                        Try
+                            lsFieldValue = cncpt.Thing.Value.String
+                        Catch ex As Exception
+                            lsFieldValue = cncpt.Thing.ToString
+                            'Not a biggie at this stage.
+                        End Try
+                        AddValuesToTextBox($"[{DateTime.Now}] {lsFieldValue}]")
                         Dim results = client.getHas(cncpt.Thing.Iid)
                         If Not IsNothing(results) Then
                             For Each result In results
