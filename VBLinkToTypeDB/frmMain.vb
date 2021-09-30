@@ -191,6 +191,11 @@ Public Class frmMain
 
             Dim nodeRelation = nodeRelations.Nodes.Add($"{Relation.Label}")
             Try
+                Dim larAttributes = client.getAttributes(Relation.Label)
+                For Each lrAttribute In larAttributes
+                    nodeRelation.Nodes.Add($"{lrAttribute.Label} [{lrAttribute.ValueType}]")
+                Next
+
                 Dim attributes = client.getRelates(Relation.Label)
                 For Each attribute In attributes
                     nodeRelation.Nodes.Add($"{attribute.Label} [{attribute.Encoding}]")
@@ -204,7 +209,19 @@ Public Class frmMain
         Dim nodeAttributes = TreeView1.Nodes.Add("Attributes")
         Dim attributesTypes = client.getAllAttributes()
         For Each attribute In attributesTypes
-            nodeAttributes.Nodes.Add($"{attribute.Label} [{attribute.ValueType}]")
+
+            Dim lrAttributeNode = nodeAttributes.Nodes.Add($"{attribute.Label} [{attribute.ValueType}]")
+
+            Dim larSubAttributes = client.getAttributes(attribute.Label)
+            For Each lrSubAttribute In larSubAttributes
+                lrAttributeNode.Nodes.Add($"{lrSubAttribute.Label} [{lrSubAttribute.ValueType}]")
+            Next
+
+            Dim plays = client.getPlays(attribute.Label)
+            For Each playing In plays
+                lrAttributeNode.Nodes.Add($"plays {playing.Scope}:{playing.Label}")
+            Next
+
         Next
 
     End Sub
