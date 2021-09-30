@@ -367,21 +367,11 @@ namespace TypeDBCustom
                     // check if query manager is null
                     if (ServerResp.Res.QueryManagerRes == null)
                         continue;
-
-                    // check the response type, loop through every conceptmap in response, yield it
-                    switch (ServerResp.Res.QueryManagerRes.ResCase)
-                    {
-                        case QueryManager.Types.Res.ResOneofCase.DefineRes:
-                        case QueryManager.Types.Res.ResOneofCase.UndefineRes:
-                        case QueryManager.Types.Res.ResOneofCase.DeleteRes:
-                            break;
-                    }
                     break;
 
                 }
                 else
                 {
-
                     // check if stream end
                     if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                         break;
@@ -395,14 +385,6 @@ namespace TypeDBCustom
                     {
                         case QueryManager.Types.ResPart.ResOneofCase.MatchResPart:
                             foreach (var concept in ServerResp.ResPart.QueryManagerResPart.MatchResPart.Answers)
-                                yield return concept;
-                            break;
-                        case QueryManager.Types.ResPart.ResOneofCase.InsertResPart:
-                            foreach (var concept in ServerResp.ResPart.QueryManagerResPart.InsertResPart.Answers)
-                                yield return concept;
-                            break;
-                        case QueryManager.Types.ResPart.ResOneofCase.UpdateResPart:
-                            foreach (var concept in ServerResp.ResPart.QueryManagerResPart.UpdateResPart.Answers)
                                 yield return concept;
                             break;
                         default:
