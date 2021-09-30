@@ -182,7 +182,7 @@ namespace TypeDBCustom
         /// in that case, this will be passed the transaction client and write to stream so we can have rest of data
         /// if the stream response DONE instead of CONTINUE then we don't need to use this.
         /// </summary>
-        public static Transaction.Types.Req trans_stream = new Transaction.Types.Req()
+        private static Transaction.Types.Req trans_stream = new Transaction.Types.Req()
         {
             StreamReq = new Transaction.Types.Stream.Types.Req() { }
         };
@@ -480,8 +480,16 @@ namespace TypeDBCustom
                     break;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
-                results = ServerResp.ResPart.TypeResPart.TypeGetSubtypesResPart.Types_.ToArray();
 
+                int ResultsCount = ServerResp.ResPart.TypeResPart.TypeGetSubtypesResPart.Types_.Count;
+                Array.Resize(ref results, ResultsCount);
+                Array.Copy(
+                    ServerResp.ResPart.TypeResPart.TypeGetSubtypesResPart.Types_.ToArray(),
+                    0,
+                    results,
+                    results.Length - ResultsCount,
+                    ResultsCount);
+                
             }
             // closes the stream
             CloseTransaction(ref Transactions);
@@ -532,7 +540,15 @@ namespace TypeDBCustom
                     break;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
-                results = ServerResp.ResPart.TypeResPart.TypeGetSupertypesResPart.Types_.ToArray();
+                
+                int ResultsCount = ServerResp.ResPart.TypeResPart.TypeGetSupertypesResPart.Types_.Count;
+                Array.Resize(ref results, ResultsCount);
+                Array.Copy(
+                    ServerResp.ResPart.TypeResPart.TypeGetSupertypesResPart.Types_.ToArray(),
+                    0,
+                    results,
+                    results.Length - ResultsCount,
+                    ResultsCount);
 
             }
             // closes the stream
@@ -584,7 +600,15 @@ namespace TypeDBCustom
                     break;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
-                results = ServerResp.ResPart.TypeResPart.RelationTypeGetRelatesResPart.Roles.ToArray();
+
+                int ResultsCount = ServerResp.ResPart.TypeResPart.RelationTypeGetRelatesResPart.Roles.Count;
+                Array.Resize(ref results, ResultsCount);
+                Array.Copy(
+                    ServerResp.ResPart.TypeResPart.RelationTypeGetRelatesResPart.Roles.ToArray(),
+                    0,
+                    results,
+                    results.Length - ResultsCount,
+                    ResultsCount);
 
             }
             // closes the stream
@@ -637,7 +661,15 @@ namespace TypeDBCustom
                     break;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
-                results = ServerResp.ResPart.TypeResPart.ThingTypeGetOwnsResPart.AttributeTypes.ToArray();
+
+                int ResultsCount = ServerResp.ResPart.TypeResPart.ThingTypeGetOwnsResPart.AttributeTypes.Count;
+                Array.Resize(ref results, ResultsCount);
+                Array.Copy(
+                    ServerResp.ResPart.TypeResPart.ThingTypeGetOwnsResPart.AttributeTypes.ToArray(),
+                    0,
+                    results,
+                    results.Length - ResultsCount,
+                    ResultsCount);
 
             }
             // closes the stream
@@ -690,7 +722,15 @@ namespace TypeDBCustom
                     break;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
-                results = ServerResp.ResPart.TypeResPart.ThingTypeGetPlaysResPart.Roles.ToArray();
+                
+                int ResultsCount = ServerResp.ResPart.TypeResPart.ThingTypeGetPlaysResPart.Roles.Count;
+                Array.Resize(ref results, ResultsCount);
+                Array.Copy(
+                    ServerResp.ResPart.TypeResPart.ThingTypeGetPlaysResPart.Roles.ToArray(),
+                    0,
+                    results,
+                    results.Length - ResultsCount,
+                    ResultsCount);
 
             }
             // closes the stream
@@ -745,7 +785,15 @@ namespace TypeDBCustom
                     break;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
-                results = ServerResp.ResPart.TypeResPart?.ThingTypeGetInstancesResPart.Things.ToArray();
+                
+                int ResultsCount = (int)ServerResp.ResPart.TypeResPart?.ThingTypeGetInstancesResPart.Things.Count;
+                Array.Resize(ref results, ResultsCount);
+                Array.Copy(
+                    ServerResp.ResPart.TypeResPart?.ThingTypeGetInstancesResPart.Things.ToArray(),
+                    0,
+                    results,
+                    results.Length - ResultsCount,
+                    ResultsCount);
 
             }
             // closes the stream
@@ -897,7 +945,15 @@ namespace TypeDBCustom
                     break;
 
                 Debug.WriteLine($"{ThingIid}: {ServerResp}");
-                result = ServerResp.ResPart.ThingResPart.RelationGetRelatingResPart.RoleTypes.ToArray();
+
+                int ResultsCount = ServerResp.ResPart.ThingResPart.RelationGetRelatingResPart.RoleTypes.Count;
+                Array.Resize(ref result, ResultsCount);
+                Array.Copy(
+                    ServerResp.ResPart.ThingResPart.RelationGetRelatingResPart.RoleTypes.ToArray(),
+                    0,
+                    result,
+                    result.Length - ResultsCount,
+                    ResultsCount);
 
             }
             // closes the stream
@@ -1001,7 +1057,15 @@ namespace TypeDBCustom
                     break;
 
                 Debug.WriteLine($"{ThingIid}: {ServerResp}");
-                result = ServerResp.ResPart.ThingResPart.ThingGetHasResPart.Attributes.ToArray();
+                
+                int ResultsCount = ServerResp.ResPart.ThingResPart.ThingGetHasResPart.Attributes.Count;
+                Array.Resize(ref result, ResultsCount);
+                Array.Copy(
+                    ServerResp.ResPart.ThingResPart.ThingGetHasResPart.Attributes.ToArray(),
+                    0,
+                    result,
+                    result.Length - ResultsCount,
+                    ResultsCount);
 
             }
             // closes the stream
