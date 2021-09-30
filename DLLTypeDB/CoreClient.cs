@@ -623,7 +623,7 @@ namespace TypeDBCustom
         /// </summary>
         /// <param name="Label">label of type</param>
         /// <returns></returns>
-        public GrpcServer.Type[] getAttributes(string Label)
+        public GrpcServer.Type[] getAttributes(string Label, bool abGetKeysOnly = false)
         {
 
             GrpcServer.Type[] results = new GrpcServer.Type[] { };
@@ -644,7 +644,7 @@ namespace TypeDBCustom
                 TypeReq = new GrpcServer.Type.Types.Req()
                 {
                     Label = Label,
-                    ThingTypeGetOwnsReq = new ThingType.Types.GetOwns.Types.Req() { KeysOnly = false}
+                    ThingTypeGetOwnsReq = new ThingType.Types.GetOwns.Types.Req() { KeysOnly = abGetKeysOnly}
                 },
                 ReqId = ReqID
             });
