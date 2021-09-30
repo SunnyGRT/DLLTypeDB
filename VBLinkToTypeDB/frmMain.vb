@@ -194,6 +194,7 @@ Public Class frmMain
 
         ' THIS WILL GET ALL THE RELATIONS
         Dim nodeRelations = TreeView1.Nodes.Add("Relations")
+        Dim Rules = client.getRules.ToList()
         Dim Relations = client.getRelations()
         For Each Relation In Relations
 
@@ -210,6 +211,14 @@ Public Class frmMain
                 Next
             Catch ex As Exception
             End Try
+
+            Dim Rule = Rules.Find(Function(x) x.Then.Trim.EndsWith($"isa {Relation.Label}", StringComparison.InvariantCultureIgnoreCase))
+            If Not IsNothing(Rule) Then
+                Dim nodeRule = nodeRelation.Nodes.Add("Rule")
+                nodeRule.Nodes.Add($"Label: {Rule.Label}")
+                nodeRule.Nodes.Add($"When: {Rule.When}")
+                nodeRule.Nodes.Add($"Then: {Rule.Then}")
+            End If
 
         Next
 
@@ -229,6 +238,19 @@ Public Class frmMain
             For Each playing In plays
                 lrAttributeNode.Nodes.Add($"plays {playing.Scope}:{playing.Label}")
             Next
+
+        Next
+
+        ' THIS WILL GET ALL THE RULES
+        Dim nodeRules = TreeView1.Nodes.Add("Rules")
+        For Each Rule In Rules
+
+            Dim nodeRule = nodeRules.Nodes.Add($"{Rule.Label}")
+            Try
+                nodeRule.Nodes.Add($"When: {Rule.When}")
+                nodeRule.Nodes.Add($"Then: {Rule.Then}")
+            Catch ex As Exception
+            End Try
 
         Next
 
