@@ -758,8 +758,6 @@ namespace TypeDBCustom
         public Thing getThing(Google.Protobuf.ByteString iid)
         {
 
-            Thing result = null;
-
             Google.Protobuf.ByteString sessionID = SessionID;
             // this will be unique transaction id for this query
             var ReqID = RandonReqId;
@@ -786,13 +784,11 @@ namespace TypeDBCustom
             Transactions.ResponseStream.MoveNext().GetAwaiter().GetResult();
             Transaction.Types.Server ServerResp = Transactions.ResponseStream.Current;
 
-            Debug.WriteLine($"{iid}: {ServerResp}");
-            result = ServerResp.Res.ConceptManagerRes.GetThingRes.Thing;
-
             // closes the stream
             CloseTransaction(ref Transactions);
 
-            return result;
+            Debug.WriteLine($"{iid.ToBase64()}: {ServerResp}");
+            return ServerResp.Res.ConceptManagerRes.GetThingRes.Thing;
 
         }
 
