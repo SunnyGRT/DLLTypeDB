@@ -201,12 +201,14 @@ Public Class frmMain
             Try
                 Dim larAttributes = client.getAttributes(Relation.Label)
                 For Each lrAttribute In larAttributes
-                    nodeRelation.Nodes.Add($"{lrAttribute.Label} [{lrAttribute.ValueType}]")
+                    nodeRelation.Nodes.Add($"owns {lrAttribute.Label} [{lrAttribute.ValueType}]")
                 Next
+
+                If Relation.Label = "timeline-ownership" Then Debugger.Break()
 
                 Dim attributes = client.getRelates(Relation.Label)
                 For Each attribute In attributes
-                    nodeRelation.Nodes.Add($"{attribute.Label} [{attribute.Encoding}]")
+                    nodeRelation.Nodes.Add($"relates {attribute.Label} [{attribute.Encoding}]")
                 Next
             Catch ex As Exception
             End Try
