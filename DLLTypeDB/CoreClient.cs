@@ -448,7 +448,7 @@ namespace TypeDBCustom
         /// </summary>
         /// <param name="Label">Label of type which you want to get descendants</param>
         /// <returns></returns>
-        public GrpcServer.Type[] getSubTypes(string Label)
+        public GrpcServer.Type[] getSubTypes(string Label, string Scope = "")
         {
 
             GrpcServer.Type[] results = new GrpcServer.Type[] { };
@@ -469,6 +469,7 @@ namespace TypeDBCustom
                 TypeReq = new GrpcServer.Type.Types.Req()
                 {
                     Label = Label,
+                    Scope = Scope,
                     TypeGetSubtypesReq = new GrpcServer.Type.Types.GetSubtypes.Types.Req() { }
                 },
                 ReqId = ReqID
@@ -487,10 +488,13 @@ namespace TypeDBCustom
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
 
-                int ResultsCount = ServerResp.ResPart.TypeResPart.TypeGetSubtypesResPart.Types_.Count;
+                int ResultsCount = (int)ServerResp.ResPart.TypeResPart?.TypeGetSubtypesResPart.Types_.Count;
+                if (ResultsCount <= 0)
+                    continue;
+
                 Array.Resize(ref results, ResultsCount);
                 Array.Copy(
-                    ServerResp.ResPart.TypeResPart.TypeGetSubtypesResPart.Types_.ToArray(),
+                    ServerResp.ResPart.TypeResPart?.TypeGetSubtypesResPart.Types_.ToArray(),
                     0,
                     results,
                     results.Length - ResultsCount,
@@ -733,6 +737,70 @@ namespace TypeDBCustom
                 Array.Resize(ref results, ResultsCount);
                 Array.Copy(
                     ServerResp.ResPart.TypeResPart.ThingTypeGetPlaysResPart.Roles.ToArray(),
+                    0,
+                    results,
+                    results.Length - ResultsCount,
+                    ResultsCount);
+
+            }
+            // closes the stream
+            CloseTransaction(ref Transactions);
+
+            return results;
+
+        }
+
+        /// <summary>
+        /// This function will get all the players of specified relates
+        /// This will return the type for player 
+        /// </summary>
+        /// <param name="Label">Label of the attribute</param>
+        /// <param name="Scope">Name of the relation</param>
+        /// <returns></returns>
+        public GrpcServer.Type[] getPlayers(string Label, string Scope)
+        {
+             
+            GrpcServer.Type[] results = new GrpcServer.Type[] { };
+
+            Google.Protobuf.ByteString sessionID = SessionID;
+            // this will be unique transaction id for this query
+            var ReqID = RandonReqId;
+            // creates the bi-directional stream for transactions
+            var Transactions = Client.transaction(null, null, CancellationToken.None);
+            // call the method to open transaction
+            OpenTransaction(ref sessionID, Transaction.Types.Type.Read, ref ReqID, ref Transactions);
+
+            // clear the existing transactions if there are any.
+            transactionClient.Reqs.Clear();
+            //you can add multiple transaction queries at once
+            transactionClient.Reqs.Add(new Transaction.Types.Req()
+            {
+                TypeReq = new GrpcServer.Type.Types.Req()
+                {
+                    Label = Label,
+                    Scope = Scope,
+                    RoleTypeGetPlayersReq = new RoleType.Types.GetPlayers.Types.Req() { }
+                },
+                ReqId = ReqID
+            });
+            //write the transaction to bi-directional stream
+            Transactions.RequestStream.WriteAsync(transactionClient).GetAwaiter().GetResult();
+
+            Transaction.Types.Server ServerResp = null;
+            // this is like an enumrator, you have to call MoveNext for every chunk of data you will receive
+            while (Transactions.ResponseStream.MoveNext(CancellationToken.None).GetAwaiter().GetResult())
+            {
+                ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
+
+                if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
+                    break;
+
+                Debug.WriteLine($"{Label}: {ServerResp}");
+
+                int ResultsCount = ServerResp.ResPart.TypeResPart.RoleTypeGetPlayersResPart.ThingTypes.Count;
+                Array.Resize(ref results, ResultsCount);
+                Array.Copy(
+                    ServerResp.ResPart.TypeResPart.RoleTypeGetPlayersResPart.ThingTypes.ToArray(),
                     0,
                     results,
                     results.Length - ResultsCount,

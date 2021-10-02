@@ -220,6 +220,9 @@ Public Class frmMain
                 attributes = client.getRelates(Relation.Label)
                 For Each attribute In attributes
                     nodeRelation.Nodes.Add($"relates {attribute.Label} [{attribute.Encoding}]")
+                    For Each player In client.getPlayers(attribute.Label, attribute.Scope)
+                        nodeRelation.Nodes.Add($"   player {player.Label} [{player.Encoding}]")
+                    Next
                 Next
             Catch ex As Exception
             End Try
