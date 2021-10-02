@@ -183,10 +183,17 @@ Public Class frmMain
                 For Each attribute In attributes
                     nodeEntity.Nodes.Add($"{attribute.Label} [{attribute.ValueType}]")
                 Next
+
                 attributes = client.getPlays(entity.Label)
                 For Each attribute In attributes
                     nodeEntity.Nodes.Add($"plays {attribute.Scope}:{attribute.Label}")
                 Next
+
+                attributes = client.getAttributes(entity.Label, True)
+                For Each attribute In attributes
+                    nodeEntity.Nodes.Add($"key - {attribute.Label} [{attribute.ValueType}]")
+                Next
+
             Catch ex As Exception
             End Try
 
@@ -205,9 +212,12 @@ Public Class frmMain
                     nodeRelation.Nodes.Add($"owns {lrAttribute.Label} [{lrAttribute.ValueType}]")
                 Next
 
-                If Relation.Label = "timeline-ownership" Then Debugger.Break()
+                Dim attributes = client.getPlays(Relation.Label)
+                For Each attribute In attributes
+                    nodeRelation.Nodes.Add($"plays {attribute.Scope}:{attribute.Label}")
+                Next
 
-                Dim attributes = client.getRelates(Relation.Label)
+                attributes = client.getRelates(Relation.Label)
                 For Each attribute In attributes
                     nodeRelation.Nodes.Add($"relates {attribute.Label} [{attribute.Encoding}]")
                 Next
