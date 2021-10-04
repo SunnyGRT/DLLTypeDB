@@ -30,6 +30,8 @@ namespace TypeDBCustom
             tPulse = new Timer((obj) =>
             {
                 pulseResp = Client.session_pulse(pulseRequest);
+                if (!pulseResp.Alive)
+                    tPulse.Change(Timeout.Infinite, Timeout.Infinite);
                 Debug.WriteLine(pulseResp.Alive);
             }, null, Timeout.Infinite, Timeout.Infinite);
         }
@@ -163,6 +165,10 @@ namespace TypeDBCustom
         public void CloseDatabase()
         {
 
+            // check if session already closed.
+            if (pulseResp != null && !pulseResp.Alive)
+                return;
+
             // changing this to infinite will stop the timer and clear the interval
             tPulse.Change(Timeout.Infinite, Timeout.Infinite);
             // create the session close request and pass it to client object with session ID
@@ -197,8 +203,8 @@ namespace TypeDBCustom
             OpenReq = new Transaction.Types.Open.Types.Req()
             {
                 SessionId = Google.Protobuf.ByteString.CopyFromUtf8("req_open"),
-                Type = Transaction.Types.Type.Read, 
-                Options = new Options() { Infer = true }
+                Type = Transaction.Types.Type.Read,
+                Options = new Options() { Infer = true, Parallel = true }
             }
         };
 
@@ -512,7 +518,7 @@ namespace TypeDBCustom
         /// not tested yet
         /// </summary>
         /// <param name="Label">Label of type</param>
-        public GrpcServer.Type[] getSuperTypes(string Label)
+        public GrpcServer.Type[] getSuperTypes(string Label, string Scope = "")
         {
 
             GrpcServer.Type[] results = new GrpcServer.Type[] { };
@@ -533,6 +539,7 @@ namespace TypeDBCustom
                 TypeReq = new GrpcServer.Type.Types.Req()
                 {
                     Label = Label,
+                    Scope = Scope,
                     TypeGetSupertypesReq = new GrpcServer.Type.Types.GetSupertypes.Types.Req() { }
                 },
                 ReqId = ReqID
@@ -573,7 +580,7 @@ namespace TypeDBCustom
         /// </summary>
         /// <param name="Label">Label for relation</param>
         /// <returns></returns>
-        public GrpcServer.Type[] getRelates(string Label)
+        public GrpcServer.Type[] getRelates(string Label, string Scope = "")
         {
 
             GrpcServer.Type[] results = null;
@@ -593,6 +600,7 @@ namespace TypeDBCustom
             {
                 TypeReq = new GrpcServer.Type.Types.Req() {
                     Label = Label,
+                    Scope = Scope,
                     RelationTypeGetRelatesReq = new RelationType.Types.GetRelates.Types.Req()
                 },
                 ReqId = ReqID
