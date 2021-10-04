@@ -36,11 +36,16 @@ Partial Class frmMain
         Me.Button4 = New System.Windows.Forms.Button()
         Me.Button5 = New System.Windows.Forms.Button()
         Me.TreeView1 = New System.Windows.Forms.TreeView()
+        Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
+        CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.SplitContainer1.Panel1.SuspendLayout()
+        Me.SplitContainer1.Panel2.SuspendLayout()
+        Me.SplitContainer1.SuspendLayout()
         Me.SuspendLayout()
         '
         'TextBox1
         '
-        Me.TextBox1.Location = New System.Drawing.Point(277, 9)
+        Me.TextBox1.Location = New System.Drawing.Point(65, 16)
         Me.TextBox1.Name = "TextBox1"
         Me.TextBox1.Size = New System.Drawing.Size(136, 20)
         Me.TextBox1.TabIndex = 0
@@ -49,7 +54,7 @@ Partial Class frmMain
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(220, 12)
+        Me.Label1.Location = New System.Drawing.Point(8, 19)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(32, 13)
         Me.Label1.TabIndex = 1
@@ -58,7 +63,7 @@ Partial Class frmMain
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(220, 38)
+        Me.Label2.Location = New System.Drawing.Point(8, 45)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(29, 13)
         Me.Label2.TabIndex = 3
@@ -66,7 +71,7 @@ Partial Class frmMain
         '
         'TextBox2
         '
-        Me.TextBox2.Location = New System.Drawing.Point(277, 35)
+        Me.TextBox2.Location = New System.Drawing.Point(65, 42)
         Me.TextBox2.Name = "TextBox2"
         Me.TextBox2.Size = New System.Drawing.Size(136, 20)
         Me.TextBox2.TabIndex = 2
@@ -74,7 +79,7 @@ Partial Class frmMain
         '
         'RichTextBox1
         '
-        Me.RichTextBox1.Location = New System.Drawing.Point(419, 50)
+        Me.RichTextBox1.Location = New System.Drawing.Point(207, 57)
         Me.RichTextBox1.Name = "RichTextBox1"
         Me.RichTextBox1.Size = New System.Drawing.Size(577, 229)
         Me.RichTextBox1.TabIndex = 4
@@ -82,7 +87,7 @@ Partial Class frmMain
         '
         'Button1
         '
-        Me.Button1.Location = New System.Drawing.Point(220, 70)
+        Me.Button1.Location = New System.Drawing.Point(8, 77)
         Me.Button1.Name = "Button1"
         Me.Button1.Size = New System.Drawing.Size(193, 23)
         Me.Button1.TabIndex = 5
@@ -93,7 +98,7 @@ Partial Class frmMain
         '
         Me.ComboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.ComboBox1.FormattingEnabled = True
-        Me.ComboBox1.Location = New System.Drawing.Point(220, 99)
+        Me.ComboBox1.Location = New System.Drawing.Point(8, 106)
         Me.ComboBox1.Name = "ComboBox1"
         Me.ComboBox1.Size = New System.Drawing.Size(193, 21)
         Me.ComboBox1.TabIndex = 6
@@ -101,7 +106,7 @@ Partial Class frmMain
         'Button2
         '
         Me.Button2.Enabled = False
-        Me.Button2.Location = New System.Drawing.Point(220, 126)
+        Me.Button2.Location = New System.Drawing.Point(8, 133)
         Me.Button2.Name = "Button2"
         Me.Button2.Size = New System.Drawing.Size(193, 23)
         Me.Button2.TabIndex = 7
@@ -111,7 +116,7 @@ Partial Class frmMain
         'Button3
         '
         Me.Button3.Enabled = False
-        Me.Button3.Location = New System.Drawing.Point(220, 155)
+        Me.Button3.Location = New System.Drawing.Point(8, 162)
         Me.Button3.Name = "Button3"
         Me.Button3.Size = New System.Drawing.Size(193, 23)
         Me.Button3.TabIndex = 8
@@ -124,7 +129,7 @@ Partial Class frmMain
                 "isation; $loc has name ""French Lick""; $per has full-name $fn; get $fn;", "match $x sub thing; get $x; offset 0; limit 30;"})
         Me.TextBox3.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest
         Me.TextBox3.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource
-        Me.TextBox3.Location = New System.Drawing.Point(460, 9)
+        Me.TextBox3.Location = New System.Drawing.Point(248, 16)
         Me.TextBox3.Multiline = True
         Me.TextBox3.Name = "TextBox3"
         Me.TextBox3.Size = New System.Drawing.Size(535, 35)
@@ -135,7 +140,7 @@ Partial Class frmMain
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(416, 12)
+        Me.Label3.Location = New System.Drawing.Point(204, 19)
         Me.Label3.Name = "Label3"
         Me.Label3.Size = New System.Drawing.Size(38, 13)
         Me.Label3.TabIndex = 10
@@ -144,7 +149,7 @@ Partial Class frmMain
         'Button4
         '
         Me.Button4.Enabled = False
-        Me.Button4.Location = New System.Drawing.Point(220, 256)
+        Me.Button4.Location = New System.Drawing.Point(8, 263)
         Me.Button4.Name = "Button4"
         Me.Button4.Size = New System.Drawing.Size(193, 23)
         Me.Button4.TabIndex = 11
@@ -154,7 +159,7 @@ Partial Class frmMain
         'Button5
         '
         Me.Button5.Enabled = False
-        Me.Button5.Location = New System.Drawing.Point(220, 184)
+        Me.Button5.Location = New System.Drawing.Point(8, 191)
         Me.Button5.Name = "Button5"
         Me.Button5.Size = New System.Drawing.Size(193, 23)
         Me.Button5.TabIndex = 13
@@ -163,34 +168,54 @@ Partial Class frmMain
         '
         'TreeView1
         '
-        Me.TreeView1.Location = New System.Drawing.Point(12, 12)
+        Me.TreeView1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.TreeView1.Location = New System.Drawing.Point(0, 0)
         Me.TreeView1.Name = "TreeView1"
-        Me.TreeView1.Size = New System.Drawing.Size(191, 267)
+        Me.TreeView1.Size = New System.Drawing.Size(275, 311)
         Me.TreeView1.TabIndex = 14
+        '
+        'SplitContainer1
+        '
+        Me.SplitContainer1.Location = New System.Drawing.Point(12, 2)
+        Me.SplitContainer1.Name = "SplitContainer1"
+        '
+        'SplitContainer1.Panel1
+        '
+        Me.SplitContainer1.Panel1.Controls.Add(Me.TreeView1)
+        '
+        'SplitContainer1.Panel2
+        '
+        Me.SplitContainer1.Panel2.Controls.Add(Me.RichTextBox1)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.Button5)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.TextBox1)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.Button4)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.Label1)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.Label3)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.TextBox2)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.TextBox3)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.Label2)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.Button3)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.Button1)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.Button2)
+        Me.SplitContainer1.Panel2.Controls.Add(Me.ComboBox1)
+        Me.SplitContainer1.Size = New System.Drawing.Size(1079, 311)
+        Me.SplitContainer1.SplitterDistance = 275
+        Me.SplitContainer1.TabIndex = 15
         '
         'frmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1007, 291)
-        Me.Controls.Add(Me.TreeView1)
-        Me.Controls.Add(Me.Button5)
-        Me.Controls.Add(Me.Button4)
-        Me.Controls.Add(Me.Label3)
-        Me.Controls.Add(Me.TextBox3)
-        Me.Controls.Add(Me.Button3)
-        Me.Controls.Add(Me.Button2)
-        Me.Controls.Add(Me.ComboBox1)
-        Me.Controls.Add(Me.Button1)
-        Me.Controls.Add(Me.RichTextBox1)
-        Me.Controls.Add(Me.Label2)
-        Me.Controls.Add(Me.TextBox2)
-        Me.Controls.Add(Me.Label1)
-        Me.Controls.Add(Me.TextBox1)
+        Me.ClientSize = New System.Drawing.Size(1118, 582)
+        Me.Controls.Add(Me.SplitContainer1)
         Me.Name = "frmMain"
         Me.Text = "VB Link for TypeDB"
+        Me.SplitContainer1.Panel1.ResumeLayout(False)
+        Me.SplitContainer1.Panel2.ResumeLayout(False)
+        Me.SplitContainer1.Panel2.PerformLayout()
+        CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.SplitContainer1.ResumeLayout(False)
         Me.ResumeLayout(False)
-        Me.PerformLayout()
 
     End Sub
 
@@ -208,4 +233,5 @@ Partial Class frmMain
     Friend WithEvents Button4 As Button
     Friend WithEvents Button5 As Button
     Friend WithEvents TreeView1 As TreeView
+    Friend WithEvents SplitContainer1 As SplitContainer
 End Class

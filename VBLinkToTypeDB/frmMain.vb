@@ -21,9 +21,6 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub frmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-
-    End Sub
 
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
 
@@ -193,7 +190,6 @@ Public Class frmMain
                 For Each attribute In attributes
                     nodeEntity.Nodes.Add($"key - {attribute.Label} [{attribute.ValueType}]")
                 Next
-
             Catch ex As Exception
             End Try
 
@@ -224,6 +220,7 @@ Public Class frmMain
                         nodeRelation.Nodes.Add($"   player {player.Label} [{player.Encoding}]")
                     Next
                 Next
+
             Catch ex As Exception
             End Try
 
