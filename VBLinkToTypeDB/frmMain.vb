@@ -205,13 +205,12 @@ Public Class frmMain
         Dim Relations = client.getRelations()
         For Each Relation In Relations
 
-            Dim relationtype = Array.FindAll(client.getSuperTypes(Relation.Label),
-                                             Function(x) Not x.Label = Relation.Label AndAlso Not x.Root)
+            Dim relationSuperType = client.getSuperType(Relation.Label)
             Dim nodeRelation As TreeNode
-            If IsNothing(relationtype) OrElse relationtype.Length < 1 Then
+            If IsNothing(relationSuperType) OrElse relationSuperType.Root Then
                 nodeRelation = nodeRelations.Nodes.Add($"{Relation.Label}")
             Else
-                nodeRelation = nodeRelations.Nodes.Add($"{Relation.Label} [{relationtype(0).Label}]")
+                nodeRelation = nodeRelations.Nodes.Add($"{Relation.Label} [{relationSuperType.Label}]")
             End If
 
             Try
@@ -233,11 +232,10 @@ Public Class frmMain
                             nodeRelation.Nodes.Add($"   player {player.Label} [{player.Encoding}]")
                         End If
                     Next
-                    For Each superType In client.getSuperTypes(attribute.Label, attribute.Scope)
-                        If Not superType.Label = attribute.Label AndAlso Not superType.Root Then
-                            nodeRelation.Nodes.Add($"   as {superType.Label} [{superType.Encoding}]")
-                        End If
-                    Next
+                    Dim SuperType = client.getSuperType(attribute.Label, attribute.Scope)
+                    If SuperType IsNot Nothing AndAlso Not SuperType.Root Then
+                        nodeRelation.Nodes.Add($"   as {SuperType.Label} [{SuperType.Encoding}]")
+                    End If
                 Next
             Catch ex As Exception
             End Try

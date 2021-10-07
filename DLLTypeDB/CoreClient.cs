@@ -303,6 +303,7 @@ namespace TypeDBCustom
             if (ServerResp.Res != null)
                 return false;
             
+            // check if the stream done message has been received from server
             if (ServerResp.ResPart.ResCase == Transaction.Types.ResPart.ResOneofCase.StreamResPart &&
                     ServerResp.ResPart.StreamResPart.State == Transaction.Types.Stream.Types.State.Done)
             {
@@ -378,9 +379,12 @@ namespace TypeDBCustom
                 }
                 else
                 {
-                    // check if stream end
+
+                    // check if there is message to stream the data
                     if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                         break;
+                    if (ServerResp.ResPart.StreamResPart != null)
+                        continue;
 
                     // check if the query manager is null
                     if (ServerResp.ResPart.QueryManagerResPart == null)
@@ -489,12 +493,15 @@ namespace TypeDBCustom
             {
                 ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
 
+                // check if there is message to stream the data
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
+                if (ServerResp.ResPart.StreamResPart != null)
+                    continue;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
 
-                int ResultsCount = (int)ServerResp.ResPart.TypeResPart?.TypeGetSubtypesResPart.Types_.Count;
+                int ResultsCount = (int)ServerResp.ResPart.TypeResPart.TypeGetSubtypesResPart.Types_.Count;
                 if (ResultsCount <= 0)
                     continue;
 
@@ -515,7 +522,54 @@ namespace TypeDBCustom
         }
 
         /// <summary>
-        /// not tested yet
+        /// This function will be used to get super type of any typedb type
+        /// e.g entities, relations, relates, attributes
+        /// </summary>
+        /// <param name="Label">Label of type</param>
+        public GrpcServer.Type getSuperType(string Label, string Scope = "")
+        {
+
+            GrpcServer.Type[] results = new GrpcServer.Type[] { };
+
+            Google.Protobuf.ByteString sessionID = SessionID;
+            // this will be unique transaction id for this query
+            var ReqID = RandonReqId;
+            // creates the bi-directional stream for transactions
+            var Transactions = Client.transaction(null, null, CancellationToken.None);
+            // call the method to open transaction
+            OpenTransaction(ref sessionID, Transaction.Types.Type.Read, ref ReqID, ref Transactions);
+
+            // clear the existing transactions if there are any.
+            transactionClient.Reqs.Clear();
+            //you can add multiple transaction queries at once
+            transactionClient.Reqs.Add(new Transaction.Types.Req()
+            {
+                TypeReq = new GrpcServer.Type.Types.Req()
+                {
+                    Label = Label,
+                    Scope = Scope,
+                    TypeGetSupertypeReq = new GrpcServer.Type.Types.GetSupertype.Types.Req() { }
+                },
+                ReqId = ReqID
+            });
+            //write the transaction to bi-directional stream
+            Transactions.RequestStream.WriteAsync(transactionClient).GetAwaiter().GetResult();
+
+            // set the current enumrator object to local so can access it shortly
+            Transactions.ResponseStream.MoveNext().GetAwaiter().GetResult();
+            Transaction.Types.Server ServerResp = Transactions.ResponseStream.Current;
+
+            // closes the stream
+            CloseTransaction(ref Transactions);
+
+            Debug.WriteLine($"{Label}: {ServerResp}");
+            return ServerResp.Res.TypeRes.TypeGetSupertypeRes.Type;
+
+        }
+
+        /// <summary>
+        /// This function will be used to get hierarchy for super types of any typedb type
+        /// e.g entities, relations, relates, attributes
         /// </summary>
         /// <param name="Label">Label of type</param>
         public GrpcServer.Type[] getSuperTypes(string Label, string Scope = "")
@@ -553,8 +607,11 @@ namespace TypeDBCustom
             {
                 ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
 
+                // check if there is message to stream the data
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
+                if (ServerResp.ResPart.StreamResPart != null)
+                    continue;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
                 
@@ -614,8 +671,11 @@ namespace TypeDBCustom
             {
                 ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
 
+                // check if there is message to stream the data
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
+                if (ServerResp.ResPart.StreamResPart != null)
+                    continue;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
 
@@ -675,8 +735,11 @@ namespace TypeDBCustom
             {
                 ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
 
+                // check if there is message to stream the data
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
+                if (ServerResp.ResPart.StreamResPart != null)
+                    continue;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
 
@@ -736,8 +799,11 @@ namespace TypeDBCustom
             {
                 ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
 
+                // check if there is message to stream the data
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
+                if (ServerResp.ResPart.StreamResPart != null)
+                    continue;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
                 
@@ -800,8 +866,11 @@ namespace TypeDBCustom
             {
                 ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
 
+                // check if there is message to stream the data
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
+                if (ServerResp.ResPart.StreamResPart != null)
+                    continue;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
 
@@ -909,8 +978,11 @@ namespace TypeDBCustom
             {
                 ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
 
+                // check if there is message to stream the data
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
+                if (ServerResp.ResPart.StreamResPart != null)
+                    continue;
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
 
@@ -970,8 +1042,11 @@ namespace TypeDBCustom
             {
                 ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
 
+                // check if there is message to stream the data
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
+                if (ServerResp.ResPart.StreamResPart != null)
+                    continue;
 
                 Debug.WriteLine($"{ThingIid}: {ServerResp}");
                 result = ServerResp.ResPart.ThingResPart.RelationGetPlayersResPart.Things.ToArray();
@@ -1023,8 +1098,11 @@ namespace TypeDBCustom
             {
                 ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
 
+                // check if there is message to stream the data
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
+                if (ServerResp.ResPart.StreamResPart != null)
+                    continue;
 
                 Debug.WriteLine($"{ThingIid}: {ServerResp}");
 
@@ -1082,8 +1160,11 @@ namespace TypeDBCustom
             {
                 ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
 
+                // check if there is message to stream the data
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
+                if (ServerResp.ResPart.StreamResPart != null)
+                    continue;
 
                 Debug.WriteLine($"{ThingIid.ToBase64()}: {ServerResp}");
                 foreach (var relation in ServerResp.ResPart.ThingResPart?.ThingGetRelationsResPart.Relations)
@@ -1135,8 +1216,11 @@ namespace TypeDBCustom
             {
                 ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
 
+                // check if there is message to stream the data
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
+                if (ServerResp.ResPart.StreamResPart != null)
+                    continue;
 
                 Debug.WriteLine($"{ThingIid}: {ServerResp}");
 
@@ -1195,8 +1279,11 @@ namespace TypeDBCustom
             {
                 ServerResp = Transactions.ResponseStream.Current; // set the current enumrator object to local so can access it shortly
 
+                // check if there is message to stream the data
                 if (CheckIfStreamEnd(ref ServerResp, ref ReqID, ref Transactions))
                     break;
+                if (ServerResp.ResPart.StreamResPart != null)
+                    continue;
 
                 foreach (var rule in ServerResp.ResPart.LogicManagerResPart.GetRulesResPart.Rules)
                     yield return rule;
