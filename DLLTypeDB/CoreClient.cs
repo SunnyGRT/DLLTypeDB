@@ -501,20 +501,8 @@ namespace TypeDBCustom
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
 
-                int ResultsCount;
-                try
-                {
-                    ResultsCount = (int)ServerResp.ResPart.TypeResPart?.TypeGetSubtypesResPart.Types_.Count;
-                }
-                catch
-                {
-                    ResultsCount = 0;
-                };
-                
-                if (ResultsCount <= 0)
-                    continue;
-
-                Array.Resize(ref results, ResultsCount);
+                int ResultsCount = ServerResp.ResPart.TypeResPart.TypeGetSubtypesResPart.Types_.Count;
+                Array.Resize(ref results, results.Length + ResultsCount);
                 Array.Copy(
                     ServerResp.ResPart.TypeResPart?.TypeGetSubtypesResPart.Types_.ToArray(),
                     0,
@@ -625,7 +613,7 @@ namespace TypeDBCustom
                 Debug.WriteLine($"{Label}: {ServerResp}");
                 
                 int ResultsCount = ServerResp.ResPart.TypeResPart.TypeGetSupertypesResPart.Types_.Count;
-                Array.Resize(ref results, ResultsCount);
+                Array.Resize(ref results, results.Length + ResultsCount);
                 Array.Copy(
                     ServerResp.ResPart.TypeResPart.TypeGetSupertypesResPart.Types_.ToArray(),
                     0,
@@ -649,7 +637,7 @@ namespace TypeDBCustom
         public GrpcServer.Type[] getRelates(string Label, string Scope = "")
         {
 
-            GrpcServer.Type[] results = null;
+            GrpcServer.Type[] results = new GrpcServer.Type[] { };
             
             Google.Protobuf.ByteString sessionID = SessionID;
             // this will be unique transaction id for this query
@@ -689,7 +677,7 @@ namespace TypeDBCustom
                 Debug.WriteLine($"{Label}: {ServerResp}");
 
                 int ResultsCount = ServerResp.ResPart.TypeResPart.RelationTypeGetRelatesResPart.Roles.Count;
-                Array.Resize(ref results, ResultsCount);
+                Array.Resize(ref results, results.Length + ResultsCount);
                 Array.Copy(
                     ServerResp.ResPart.TypeResPart.RelationTypeGetRelatesResPart.Roles.ToArray(),
                     0,
@@ -753,7 +741,7 @@ namespace TypeDBCustom
                 Debug.WriteLine($"{Label}: {ServerResp}");
 
                 int ResultsCount = ServerResp.ResPart.TypeResPart.ThingTypeGetOwnsResPart.AttributeTypes.Count;
-                Array.Resize(ref results, ResultsCount);
+                Array.Resize(ref results, results.Length + ResultsCount);
                 Array.Copy(
                     ServerResp.ResPart.TypeResPart.ThingTypeGetOwnsResPart.AttributeTypes.ToArray(),
                     0,
@@ -817,7 +805,7 @@ namespace TypeDBCustom
                 Debug.WriteLine($"{Label}: {ServerResp}");
                 
                 int ResultsCount = ServerResp.ResPart.TypeResPart.ThingTypeGetPlaysResPart.Roles.Count;
-                Array.Resize(ref results, ResultsCount);
+                Array.Resize(ref results, results.Length + ResultsCount);
                 Array.Copy(
                     ServerResp.ResPart.TypeResPart.ThingTypeGetPlaysResPart.Roles.ToArray(),
                     0,
@@ -884,7 +872,7 @@ namespace TypeDBCustom
                 Debug.WriteLine($"{Label}: {ServerResp}");
 
                 int ResultsCount = ServerResp.ResPart.TypeResPart.RoleTypeGetPlayersResPart.ThingTypes.Count;
-                Array.Resize(ref results, ResultsCount);
+                Array.Resize(ref results, results.Length + ResultsCount);
                 Array.Copy(
                     ServerResp.ResPart.TypeResPart.RoleTypeGetPlayersResPart.ThingTypes.ToArray(),
                     0,
@@ -996,7 +984,7 @@ namespace TypeDBCustom
                 Debug.WriteLine($"{Label}: {ServerResp}");
 
                 int ResultsCount = (int)ServerResp.ResPart.TypeResPart?.ThingTypeGetInstancesResPart.Things.Count;
-                Array.Resize(ref results, ResultsCount);
+                Array.Resize(ref results, results.Length + ResultsCount);
                 Array.Copy(
                     ServerResp.ResPart.TypeResPart?.ThingTypeGetInstancesResPart.Things.ToArray(),
                     0,
@@ -1076,7 +1064,7 @@ namespace TypeDBCustom
         public GrpcServer.Type[] getRelating(Google.Protobuf.ByteString ThingIid)
         {
 
-            GrpcServer.Type[] result = new GrpcServer.Type[] { };
+            GrpcServer.Type[] results = new GrpcServer.Type[] { };
 
             Google.Protobuf.ByteString sessionID = SessionID;
             // this will be unique transaction id for this query
@@ -1116,19 +1104,19 @@ namespace TypeDBCustom
                 Debug.WriteLine($"{ThingIid}: {ServerResp}");
 
                 int ResultsCount = ServerResp.ResPart.ThingResPart.RelationGetRelatingResPart.RoleTypes.Count;
-                Array.Resize(ref result, ResultsCount);
+                Array.Resize(ref results, results.Length + ResultsCount);
                 Array.Copy(
                     ServerResp.ResPart.ThingResPart.RelationGetRelatingResPart.RoleTypes.ToArray(),
                     0,
-                    result,
-                    result.Length - ResultsCount,
+                    results,
+                    results.Length - ResultsCount,
                     ResultsCount);
 
             }
             // closes the stream
             CloseTransaction(ref Transactions);
 
-            return result;
+            return results;
 
         }
 
@@ -1194,7 +1182,7 @@ namespace TypeDBCustom
         public Thing[] getHas(Google.Protobuf.ByteString ThingIid)
         {
 
-            Thing[] result = new Thing[] { };
+            Thing[] results = new Thing[] { };
 
             Google.Protobuf.ByteString sessionID = SessionID;
             // this will be unique transaction id for this query
@@ -1234,19 +1222,19 @@ namespace TypeDBCustom
                 Debug.WriteLine($"{ThingIid}: {ServerResp}");
 
                 int ResultsCount = ServerResp.ResPart.ThingResPart.ThingGetHasResPart.Attributes.Count;
-                Array.Resize(ref result, ResultsCount);
+                Array.Resize(ref results, results.Length + ResultsCount);
                 Array.Copy(
                     ServerResp.ResPart.ThingResPart.ThingGetHasResPart.Attributes.ToArray(),
                     0,
-                    result,
-                    result.Length - ResultsCount,
+                    results,
+                    results.Length - ResultsCount,
                     ResultsCount);
 
             }
             // closes the stream
             CloseTransaction(ref Transactions);
 
-            return result;
+            return results;
 
         }
 

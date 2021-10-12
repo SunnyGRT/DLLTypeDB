@@ -172,6 +172,7 @@ Public Class frmMain
         ' THIS WILL GET ALL THE ENTITIES
         Dim nodeEntities = TreeView1.Nodes.Add("Entities")
         Dim Entities = client.getEntities()
+        nodeEntities.Text &= $" [{Entities.Count}]"
         For Each entity In Entities
 
             Dim nodeEntity = nodeEntities.Nodes.Add($"{entity.Label}")
@@ -199,6 +200,7 @@ Public Class frmMain
         Dim nodeRelations = TreeView1.Nodes.Add("Relations")
         Dim Rules = client.getRules.ToList()
         Dim Relations = client.getRelations()
+        nodeRelations.Text &= $" [{Relations.Count}]"
         For Each Relation In Relations
 
             Dim relationSuperType = client.getSuperType(Relation.Label)
@@ -222,6 +224,9 @@ Public Class frmMain
 
                 attributes = client.getRelates(Relation.Label)
                 For Each attribute In attributes
+                    If attribute.Root AndAlso attribute.Label = "role" Then
+                        Continue For
+                    End If
                     nodeRelation.Nodes.Add($"relates {attribute.Label} [{attribute.Encoding}]")
                     For Each player In client.getPlayers(attribute.Label, attribute.Scope)
                         If Not player.Label = attribute.Label AndAlso Not player.Root Then
@@ -250,6 +255,7 @@ Public Class frmMain
         ' THIS WILL GET ALL THE ATTRIBUTES 
         Dim nodeAttributes = TreeView1.Nodes.Add("Attributes")
         Dim attributesTypes = client.getAllAttributes()
+        nodeAttributes.Text &= $" [{attributesTypes.Count}]"
         For Each attribute In attributesTypes
 
             Dim lrAttributeNode = nodeAttributes.Nodes.Add($"{attribute.Label} [{attribute.ValueType}]")
@@ -268,6 +274,7 @@ Public Class frmMain
 
         ' THIS WILL GET ALL THE RULES
         Dim nodeRules = TreeView1.Nodes.Add("Rules")
+        nodeRules.Text &= $" [{Rules.Count}]"
         For Each Rule In Rules
 
             Dim nodeRule = nodeRules.Nodes.Add($"{Rule.Label}")
