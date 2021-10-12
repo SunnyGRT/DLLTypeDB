@@ -494,7 +494,16 @@ namespace TypeDBCustom
 
                 Debug.WriteLine($"{Label}: {ServerResp}");
 
-                int ResultsCount = (int)ServerResp.ResPart.TypeResPart?.TypeGetSubtypesResPart.Types_.Count;
+                int ResultsCount;
+                try
+                {
+                    ResultsCount = (int)ServerResp.ResPart.TypeResPart?.TypeGetSubtypesResPart.Types_.Count;
+                }
+                catch
+                {
+                    ResultsCount = 0;
+                };
+                
                 if (ResultsCount <= 0)
                     continue;
 
